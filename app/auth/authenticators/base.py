@@ -12,7 +12,6 @@ class AuthenticatedUser:
     permissions = ''
 
 
-# TODO make authenticator a "service"
 class Authenticator:
     def __init__(self, app):
         self.app = app

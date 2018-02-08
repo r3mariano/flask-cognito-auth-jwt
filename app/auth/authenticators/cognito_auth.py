@@ -30,17 +30,18 @@ class CognitoAuthenticator(Authenticator):
         # 'access_token': user_obj._metadata['access_token'],
         # 'refresh_token': user_obj._metadata['refresh_token']
         auth_user = AuthenticatedUser()
-        auth_user.id = user_obj._data['id']
+        auth_user.id = user_obj._data.get('id')
         auth_user.username = user_obj.username
-        auth_user.permissions = user_obj._data['permissions']
+        auth_user.permissions = user_obj._data.get('permissions')
         return auth_user
 
     def authenticate(self, username: str, password: str) -> Optional[AuthenticatedUser]:
         user = self.build_cognito(username=username)
         try:
             user.authenticate(password)
+            if self.app.config['TESTING']:
+                pprint.PrettyPrinter().pprint(vars(user))
             user_object = self.user_obj_from_cognito(user)
-            pprint.PrettyPrinter().pprint(vars(user_object))
             return self.auth_user_from_cognito(user_object)
         except ClientError:
             traceback.print_exc()
@@ -51,7 +52,8 @@ class CognitoAuthenticator(Authenticator):
         try:
             user.register(username, password, email=username,)
         except ClientError:
-            traceback.print_exc()
+            if self.app.config['TESTING']:
+                traceback.print_exc()
             # TODO exposes that we are using python?
             msg = traceback.format_exc().splitlines()[-1]
             raise AuthError(msg)
@@ -61,7 +63,8 @@ class CognitoAuthenticator(Authenticator):
         try:
             user.confirm_sign_up(verify_code, username=username,)
         except ClientError:
-            traceback.print_exc()
+            if self.app.config['TESTING']:
+                traceback.print_exc()
             # TODO exposes that we are using python?
             msg = traceback.format_exc().splitlines()[-1]
             raise AuthError(msg)

@@ -1,8 +1,8 @@
 from re import split
 
-from flask import request, Blueprint
+from flask import request, Blueprint, current_app
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, set_access_cookies, \
-    set_refresh_cookies, unset_jwt_cookies, get_jwt_claims, jwt_refresh_token_required
+    set_refresh_cookies, unset_jwt_cookies, jwt_refresh_token_required
 
 from app.auth.authenticators import authenticator
 from app.auth.authenticators.base import AuthError, AuthenticatedUser
@@ -15,9 +15,10 @@ auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 def make_jwt_payload_from_user(user: AuthenticatedUser):
-    return {
-        'pm': [p for p in split(r',', user.permissions)]
-    }
+    payload = {}
+    if user.permissions is not None:
+        payload['pm'] = [p for p in split(r',', user.permissions)]
+    return payload
 
 
 def init_jwt(flask_app):
@@ -63,7 +64,7 @@ def unprotected():
 @auth.route('/login', methods=['POST'])
 def login():
     form = request.get_json()
-    my_authenticator = authenticator(auth)
+    my_authenticator = authenticator(current_app)
     auth_user = my_authenticator.authenticate(form['username'], form['password'])
     if auth_user is None:
         return build_response({'message': 'Invalid username or password.'}), 401
@@ -94,7 +95,7 @@ def logout():
 # TODO not good; users can just sign up.
 @auth.route('/test-register', methods=['POST'])
 def register():
-    my_authenticator = authenticator(auth)
+    my_authenticator = authenticator(current_app)
     form = request.get_json()
     try:
         my_authenticator.register(form['email'], form['password'])
@@ -106,7 +107,7 @@ def register():
 
 @auth.route('/verify', methods=['POST'])
 def verify():
-    my_authenticator = authenticator(auth)
+    my_authenticator = authenticator(current_app)
     form = request.get_json()
     try:
         my_authenticator.verify(form['email'], form['verify_code'])
