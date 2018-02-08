@@ -1,0 +1,5 @@
+.idea
+/htmlcov/
+/.coverage
+**/test.db
+config.py
