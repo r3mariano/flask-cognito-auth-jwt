@@ -1,3 +1,4 @@
-# An auth server that uses Cognito
+# A demo auth server that uses Cognito and JWT
 
-Work in progress, use at your own risk.
+This project is incomplete and will probably never be updated.
+
